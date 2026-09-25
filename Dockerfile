@@ -39,6 +39,8 @@ RUN apt-get update \
         python3 python3-pip python3-venv python3-dev \
         nodejs npm \
         locales ncurses-term language-pack-en language-pack-fa \
+        xfce4 xfce4-goodies \
+        xrdp dbus-x11 dbus-user-session \       
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && mkdir -p /run/sshd \
@@ -102,7 +104,14 @@ RUN chmod +x /usr/local/bin/src-sync \
     && mkdir -p /root/src
 
 # Expose port 22 (default SSH port) / باز کردن پورت ۲۲ (پورت پیش‌فرض SSH)
-EXPOSE 22
+# XFCE sebagai sesi default untuk root & user baru
+RUN echo "xfce4-session" > /root/.xsession \
+    && echo "xfce4-session" > /etc/skel/.xsession
 
-# Start the SSH server / راه‌اندازی سرور SSH
-CMD ["/usr/local/bin/ssh-user-config.sh"]
+# Entrypoint wrapper: xrdp + sshd
+COPY start-xrdp.sh /usr/local/bin/start-xrdp.sh
+RUN chmod +x /usr/local/bin/start-xrdp.sh
+
+EXPOSE 22 3389
+
+CMD ["/usr/local/bin/start-xrdp.sh"]
